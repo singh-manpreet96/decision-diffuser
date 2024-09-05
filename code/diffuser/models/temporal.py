@@ -114,6 +114,8 @@ class TemporalUnet(nn.Module):
         dim=128,
         dim_mults=(1, 2, 4, 8),
         returns_condition=False,
+        is_labelled=False,
+        label_dim=0,
         condition_dropout=0.1,
         calc_energy=False,
         kernel_size=5,
@@ -157,6 +159,19 @@ class TemporalUnet(nn.Module):
             embed_dim = 2*dim
         else:
             embed_dim = dim
+
+        if is_labelled:
+            assert label_dim>0, "label dim must be non zero"
+
+            self.label_mlp = nn.Sequential(
+                nn.Linear(label_dim, dim),
+                act_fn,
+                nn.Linear(dim, dim*4),
+                act_fn,
+                nn.Linear(dim*4, dim)
+            )
+            embed_dim += dim
+
 
         self.downs = nn.ModuleList([])
         self.ups = nn.ModuleList([])
